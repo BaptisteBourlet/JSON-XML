@@ -1,45 +1,67 @@
 const express = require('express');
 const app = express();
-const PORT = 7000;
 const bodyParser = require('body-parser');
-const { toXML } = require('jstoxml');
 const fs = require('fs');
+const dotenv = require('dotenv');
+const cors = require('cors');
+const jwt = require('jsonwebtoken');
+const { toXML } = require('jstoxml');
+dotenv.config();
+const PORT = 7000;
+
+
+// packages used
+// https://www.npmjs.com/package/jstoxml
+// https://jwt.io/
+
+
+// options
+const corsOptions = {
+   origin: '*', // all origins for now
+   optionsSuccessStatus: 200,
+   credentials: true,
+}
+
+const xmlOptions = {
+   header: '<?xml version="1.0" encoding="UTF-16" standalone="no"?>',
+   attributesFilter: false,
+   filter: false
+}
 
 //middlewares
-app.use(express.json());
-app.engine('html', require('ejs').renderFile);
 app.use('/', express.static(__dirname + '/views'));
-app.use('/', express.static(__dirname + '/ga'));
+app.use(express.json());
+// app.engine('html', require('ejs').renderFile);
 app.set('view engine', 'html');
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(cors(corsOptions));
 
 
-app.get('/index', (req, res) => {
-   res.render('index');
-})
-
-app.post('/getJSON', (req, res) => {
+// routes
+app.post('/parseJSON', (req, res) => {
    const receivedJSON = req.body;
 
-   const xmlOptions = {
-      header: '<?xml version="1.0" encoding="UTF-16" standalone="no"?>',
-      attributesFilter: false,
-      filter: false
-   }
+   const folder = __dirname + '/parsedXML';
 
-   let XML = toXML(generateCorrectFormat(receivedJSON), xmlOptions);
-
-   fs.writeFile(__dirname + `/parsedXML/${generateName(receivedJSON)}.xml`, XML, (err) => {
-      if (err) {
-         res.status(401).send('Error occured during parsing process');
-         console.log(err);
+   try {
+      if (!fs.existsSync(folder)) {
+         fs.mkdirSync(folder);
       }
 
+      let XML = toXML(generateCorrectFormat(receivedJSON), xmlOptions);
+
+      fs.writeFileSync(`${folder}/${generateName(receivedJSON)}.xml`, XML)
+
       res.status(200).send('Received and Parsed the JSON.');
-   })
+   }
+   catch (err) {
+      res.status(401).send('Error occured during parsing process');
+      console.log(err);
+   }
 })
 
 
+// server starts
 const server = app.listen(PORT, () => {
    console.log('listening on port ' + PORT);
 })
@@ -47,9 +69,22 @@ const server = app.listen(PORT, () => {
 
 
 
+// functions & middlewares
 
+const authToken = async (req, res, next) => {
+   const authHeader = req.headers.authorization; // if sent with header as 'Bearer xxxtokenxxx'
 
+   const token = authHeader.split()[1];
 
+   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+      if (err) {
+         res.status(401).send('Unauthorized request');
+      }
+
+      console.log(decoded);
+      next()
+   });
+}
 
 const generateName = (json) => {
    const { Company, SequenceGroupId, MessageKey, MessageXml } = json;
@@ -93,3 +128,5 @@ const generateCorrectFormat = (json) => {
       }
    }
 }
+
+
