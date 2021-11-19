@@ -23,7 +23,7 @@ const corsOptions = {
 }
 
 const xmlOptions = {
-   header: '<?xml version="1.0" encoding="UTF-16" standalone="no"?>',
+   header: '<?xml version="1.0" encoding="UTF-8" standalone="no"?>',
    attributesFilter: false,
    filter: false
 }
@@ -35,7 +35,6 @@ app.use(express.json());
 app.set('view engine', 'html');
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors(corsOptions));
-
 
 // routes
 app.post('/parseJSON', (req, res) => {
