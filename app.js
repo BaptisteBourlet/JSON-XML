@@ -37,10 +37,15 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors(corsOptions));
 
 // routes
-app.post('/parseJSON', (req, res) => {
+app.post('/data/CbiMessages', (req, res) => {
    const receivedJSON = req.body;
 
    const folder = __dirname + '/parsedXML';
+
+   if (!checkValidProps(receivedJSON)) {
+      res.status(400).send('Format incorrect, please check again the properties');
+      return;
+   }
 
    try {
       if (!fs.existsSync(folder)) {
@@ -66,8 +71,6 @@ const server = app.listen(PORT, () => {
 })
 
 
-
-
 // functions & middlewares
 
 const authToken = async (req, res, next) => {
@@ -84,6 +87,32 @@ const authToken = async (req, res, next) => {
       next()
    });
 }
+
+
+const checkValidProps = (json) => {
+   const validProps = [
+      'Company',
+      'ConversationDate',
+      'ConversationId',
+      'ConversationName',
+      'ConversationSeqNo',
+      'DomainId',
+      'EndOfMessage',
+      'MessageKey',
+      'MessageXml',
+      'Name',
+      'Sender',
+      'SequenceGroupId',
+      'ValidateChanges',
+      'dataAreaId'];
+
+   let propsToCheck = Object.keys(json).sort(); // expect an array exactly like validProps
+   let validString = validProps.join('');
+   let stringToCheck = propsToCheck.join('');
+
+   return validString == stringToCheck;
+}
+
 
 const generateName = (json) => {
    const { Company, SequenceGroupId, MessageKey, MessageXml } = json;
