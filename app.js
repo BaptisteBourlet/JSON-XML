@@ -7,13 +7,15 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const { toXML } = require('jstoxml');
 dotenv.config();
-const PORT = 7000;
+const PORT = 62315;
+const basicAuth = require('./basicAuth');
+const { DBPool } = require('idb-pconnector');
 
+// const db = require('/QOpenSys/QIBM/ProdData/OPS/Node4/os400/db2i/lib/db2a');
 
 // packages used
 // https://www.npmjs.com/package/jstoxml
 // https://jwt.io/
-
 
 // options
 const corsOptions = {
@@ -54,9 +56,13 @@ app.post('/data/CbiMessages', (req, res) => {
 
       let XML = toXML(generateCorrectFormat(receivedJSON), xmlOptions);
 
-      fs.writeFileSync(`${folder}/${generateName(receivedJSON)}.xml`, XML)
+      const fileName = `${generateName(receivedJSON)}.xml`;
 
-      res.status(200).send('Received and Parsed the JSON.');
+      fs.writeFileSync(`${folder}/${fileName}`, XML);
+
+      callRPG(fileName);
+
+      res.status(200).send('Received and Parsed the JSON');
    }
    catch (err) {
       res.status(401).send('Error occured during parsing process');
@@ -73,20 +79,51 @@ const server = app.listen(PORT, () => {
 
 // functions & middlewares
 
-const authToken = async (req, res, next) => {
-   const authHeader = req.headers.authorization; // if sent with header as 'Bearer xxxtokenxxx'
+const callRPG = async (fileName) => {
 
-   const token = authHeader.split()[1];
 
-   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-      if (err) {
-         res.status(401).send('Unauthorized request');
-      }
+   const pool = new DBPool();
 
-      console.log(decoded);
-      next()
-   });
+   const connection = pool.attach();
+
+   const statement = connection.getStatement();
+
+   const sql = `CALL RHEPGM.RHEXML3(${fileName})`;
+
+   await statement.prepare(sql);
+   
+   const results = await statement.execute();
+
+   if (results) {
+      console.log(`results:\n ${JSON.stringify(results)}`);
+   }
+
+   await pool.detach(connection);
+
+   // const sql = `call #RHEPGM.RHEXML3(${fileName})`
+
+   // const dbconn = new db.dbconn();
+
+   // dbconn.conn("*LOCAL");
+
+   // const stmt = new db.dbstmt(dbconn);
+
+   // stmt.prepareSync(sql);
+
+   // stmt.bindParamSync([
+   //    [fileName, db.SQL_PARAM_INPUT, 2],
+   // ]);
+
+   // stmt.executeSync(function callback(out) {
+   //    console.log('file has been imported', out)
+   // });
+
+   // delete stmt;
+   // dbconn.disconn();
+   // delete dbconn;
 }
+
+
 
 
 const checkValidProps = (json) => {
@@ -115,12 +152,12 @@ const checkValidProps = (json) => {
 
 
 const generateName = (json) => {
-   const { Company, SequenceGroupId, MessageKey, MessageXml } = json;
+   const { Company, SequenceGroupId, MessageKey, MessageXml, ConversationSeqNo } = json;
 
    let match = MessageXml.match(/<ItemId>([^<]*)<\/ItemId>/);
    let ItemId = match[1]; // extract ItemId from JSON
 
-   return `${SequenceGroupId}_DAT(${Company})_(${ItemId}(0))_${MessageKey.toUpperCase()}`;
+   return `${SequenceGroupId}_DAT(${Company})_(${ItemId}(${ConversationSeqNo}))_${MessageKey.toUpperCase()}`;
 }
 
 const generateCorrectFormat = (json) => {
