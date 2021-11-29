@@ -58,9 +58,11 @@ app.post('/data/CbiMessages', (req, res) => {
 
       const fileName = `${generateName(receivedJSON)}.xml`;
 
-      fs.writeFileSync(`${folder}/${fileName}`, XML);
+      let fileNameWithPath = `${folder}/${fileName}`;
 
-      callRPG(fileName);
+      fs.writeFileSync(`${fileNameWithPath}`, XML);
+
+      callRPG(fileNameWithPath);
 
       res.status(200).send('Received and Parsed the JSON');
    }
@@ -81,7 +83,6 @@ const server = app.listen(PORT, () => {
 
 const callRPG = async (fileName) => {
 
-
    const pool = new DBPool();
 
    const connection = pool.attach();
@@ -91,7 +92,7 @@ const callRPG = async (fileName) => {
    const sql = `CALL RHEPGM.RHEXML3(${fileName})`;
 
    await statement.prepare(sql);
-   
+
    const results = await statement.execute();
 
    if (results) {
