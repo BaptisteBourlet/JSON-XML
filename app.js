@@ -112,7 +112,7 @@ const callRPG = async (fileName) => {
    // stmt.prepareSync(sql);
 
    // stmt.bindParamSync([
-   //    [fileName, db.SQL_PARAM_INPUT, 2],
+   //    [fileName, db.SQL_PARAM_IN
    // ]);
 
    // stmt.executeSync(function callback(out) {
