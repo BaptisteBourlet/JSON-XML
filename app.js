@@ -4,7 +4,6 @@ const bodyParser = require('body-parser');
 const fs = require('fs');
 const dotenv = require('dotenv');
 const cors = require('cors');
-const jwt = require('jsonwebtoken');
 const { toXML } = require('jstoxml');
 dotenv.config();
 const PORT = 62315;
@@ -41,6 +40,7 @@ app.use(cors(corsOptions));
 // routes
 app.post('/data/CbiMessages', (req, res) => {
    const receivedJSON = req.body;
+   const errors = {};
 
    const folder = __dirname + '/parsedXML';
 
@@ -67,7 +67,7 @@ app.post('/data/CbiMessages', (req, res) => {
       res.status(200).send('Received and Parsed the JSON');
    }
    catch (err) {
-      res.status(401).send('Error occured during parsing process');
+      res.status(401).send(err);
       console.log(err);
    }
 })
@@ -123,8 +123,6 @@ const callRPG = async (fileName) => {
    // dbconn.disconn();
    // delete dbconn;
 }
-
-
 
 
 const checkValidProps = (json) => {

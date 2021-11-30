@@ -38,3 +38,4 @@ const promise1 = new Promise((resolve, reject) => {
    } finally {  
      console.log('finally runs');  
    }})()
+
