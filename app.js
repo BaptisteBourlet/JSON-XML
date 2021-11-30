@@ -105,7 +105,7 @@ const callRPG = async (fileName) => {
 
       console.log('3 - statement started');
 
-      const sql = `CALL RHEPGM.RHEXML3(${fileName})`;
+      const sql = `CALL RHEPGM.RHEXML3('${fileName}')`;
 
       const preparedStmt = await statement.prepare(sql);
 
