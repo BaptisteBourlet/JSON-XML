@@ -67,7 +67,7 @@ app.post('/data/CbiMessages', (req, res) => {
             return;
          }
 
-         fileNameWithPath = fileNameWithPath.replace('/BECAB004', '');
+         fileNameWithPath = fileNameWithPath.replace('/BECAB004/', '');
 
          check = { check: 'before callRPG' };
 
