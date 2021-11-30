@@ -92,23 +92,40 @@ const server = app.listen(PORT, () => {
 
 const callRPG = async (fileName) => {
 
-   const pool = new DBPool();
+   try {
+      const pool = new DBPool();
 
-   const connection = pool.attach();
+      console.log('1 - created new Pool');
 
-   const statement = connection.getStatement();
+      const connection = pool.attach();
 
-   const sql = `CALL RHEPGM.RHEXML3(${fileName})`;
+      console.log('2 - connected to DB2')
 
-   await statement.prepare(sql);
+      const statement = connection.getStatement();
 
-   const results = await statement.execute();
+      console.log('3 - statement started');
 
-   if (results) {
-      console.log(`results:\n ${JSON.stringify(results)}`);
+      const sql = `CALL RHEPGM.RHEXML3(${fileName})`;
+
+      const preparedStmt = await statement.prepare(sql);
+
+      console.log('4 - STMT prepared', preparedStmt);
+
+      const results = await statement.execute();
+
+      console.log('5 - executed statement');
+
+      if (results) {
+         console.log(`results:\n ${JSON.stringify(results)}`);
+      }
+
+      await pool.detach(connection);
+
+      console.log('6 - stopped connection');
    }
-
-   await pool.detach(connection);
+   catch (err) {
+      console.log(err);
+   }
 
 
    return results;
