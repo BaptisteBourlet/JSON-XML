@@ -48,6 +48,7 @@ app.post('/data/CbiMessages', (req, res) => {
       res.status(400).send('Format incorrect, please check again the properties');
       return;
    }
+   let check = {};
 
    try {
       if (!fs.existsSync(folder)) {
@@ -68,14 +69,16 @@ app.post('/data/CbiMessages', (req, res) => {
 
          fileNameWithPath = fileNameWithPath.replace('/BECAB004', '');
 
+         check = { check: 'before callRPG' };
+
          const callRPGResult = callRPG(fileNameWithPath);
 
-         res.status(200).send(callRPGResult);
+         res.status(200).send({ check, callRPGResult });
       });
    }
    catch (err) {
       res.status(401).send(err);
-      console.log(err);
+      console.log({ check, err });
    }
 })
 
