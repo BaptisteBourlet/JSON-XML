@@ -60,11 +60,16 @@ app.post('/data/CbiMessages', (req, res) => {
 
       let fileNameWithPath = `${folder}/${fileName}`;
 
-      fs.writeFileSync(`${fileNameWithPath}`, XML);
+      fs.writeFile(`${fileNameWithPath}`, XML, (err) => {
+         if (err) {
+            res.status(401).send(err);
+            return;
+         }
 
-      callRPG(fileNameWithPath);
+         const callRPGResult = callRPG(fileNameWithPath);
 
-      res.status(200).send('Received and Parsed the JSON');
+         res.status(200).send(callRPGResult);
+      });
    }
    catch (err) {
       res.status(401).send(err);
@@ -100,6 +105,9 @@ const callRPG = async (fileName) => {
    }
 
    await pool.detach(connection);
+
+
+   return results;
 
    // const sql = `call #RHEPGM.RHEXML3(${fileName})`
 
