@@ -66,6 +66,8 @@ app.post('/data/CbiMessages', (req, res) => {
             return;
          }
 
+         fileNameWithPath = fileNameWithPath.replace('/BECAB004', '');
+
          const callRPGResult = callRPG(fileNameWithPath);
 
          res.status(200).send(callRPGResult);
@@ -82,7 +84,6 @@ app.post('/data/CbiMessages', (req, res) => {
 const server = app.listen(PORT, () => {
    console.log('listening on port ' + PORT);
 })
-
 
 // functions & middlewares
 
