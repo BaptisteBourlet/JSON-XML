@@ -8,9 +8,8 @@ const { toXML } = require('jstoxml');
 dotenv.config();
 const PORT = 62315;
 const basicAuth = require('./basicAuth');
-const { DBPool } = require('idb-pconnector');
+// const { DBPool } = require('idb-pconnector');
 
-// const db = require('/QOpenSys/QIBM/ProdData/OPS/Node4/os400/db2i/lib/db2a');
 
 // packages used
 // https://www.npmjs.com/package/jstoxml
@@ -30,17 +29,15 @@ const xmlOptions = {
 }
 
 //middlewares
-app.use('/', express.static(__dirname + '/views'));
 app.use(express.json());
-// app.engine('html', require('ejs').renderFile);
 app.set('view engine', 'html');
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors(corsOptions));
 
-// routes
-app.post('/data/CbiMessages', (req, res) => {
+// CableBuilder routes
+
+app.post('/data/CbiMessages', basicAuth, (req, res) => {
    const receivedJSON = req.body;
-   const errors = {};
 
    const folder = __dirname + '/parsedXML';
 
@@ -48,7 +45,6 @@ app.post('/data/CbiMessages', (req, res) => {
       res.status(400).send('Format incorrect, please check again the properties');
       return;
    }
-   let check = {};
 
    try {
       if (!fs.existsSync(folder)) {
@@ -63,24 +59,63 @@ app.post('/data/CbiMessages', (req, res) => {
 
       fs.writeFile(`${fileNameWithPath}`, XML, (err) => {
          if (err) {
-            res.status(401).send(err);
+            res.status(401).send('Unable to write file to disk', err);
             return;
          }
 
-         fileNameWithPath = fileNameWithPath.replace('/BECAB004/', '');
-
-         check = { check: 'before callRPG' };
-
-         const callRPGResult = callRPG(fileNameWithPath);
-
-         res.status(200).send({ check, callRPGResult });
+         res.status(200).send('Received and successfully parsed the JSON.');
       });
    }
    catch (err) {
-      res.status(401).send(err);
+      res.status(401).send('Error occured.', err);
       console.log({ check, err });
    }
 })
+
+
+// app.post('/test', (req, res) => {
+//    const receivedJSON = req.body;
+
+//    const folder = __dirname + '/parsedXML';
+
+//    if (!checkValidProps(receivedJSON)) {
+//       res.status(400).send('Format incorrect, please check again the properties');
+//       return;
+//    }
+
+//    try {
+//       if (!fs.existsSync(folder)) {
+//          fs.mkdirSync(folder);
+//       }
+
+//       let XML = toXML(generateCorrectFormat(receivedJSON), xmlOptions);
+
+//       const fileName = `${generateName(receivedJSON)}.xml`;
+
+//       let fileNameWithPath = `${folder}/${fileName}`;
+
+//       fs.writeFile(`${fileNameWithPath}`, XML, (err) => {
+//          if (err) {
+//             res.status(401).send('Unable to write file to disk', err);
+//             return;
+//          }
+
+//          fileNameWithPath = fileNameWithPath.replace('/BECAB004', '');
+
+//          const callResult = callRPG(fileNameWithPath);
+
+//          res.status(200).send('Received and parsed the JSON.', callResult);
+//       });
+//    }
+
+//    catch (err) {
+//       res.status(401).send('Error occured.', err);
+//       console.log({ check, err });
+//    }
+// })
+
+
+
 
 
 // server starts
@@ -90,45 +125,43 @@ const server = app.listen(PORT, () => {
 
 // functions & middlewares
 
-const callRPG = async (fileName) => {
+const callRPG = (fileName) => {
+   return Promise((resolve, reject) => {
+      return async () => {
+         try {
+            const pool = new DBPool();
 
-   try {
-      const pool = new DBPool();
+            console.log('1 - created new Pool');
 
-      console.log('1 - created new Pool');
+            const connection = pool.attach();
 
-      const connection = pool.attach();
+            console.log('2 - connected to DB2')
 
-      console.log('2 - connected to DB2')
+            const statement = connection.getStatement();
 
-      const statement = connection.getStatement();
+            console.log('3 - statement started');
 
-      console.log('3 - statement started');
+            const sql = `CALL RHEPGM.RHEXML3('${fileName}')`;
 
-      const sql = `CALL RHEPGM.RHEXML3('${fileName}')`;
+            await statement.prepare(sql);
 
-      const preparedStmt = await statement.prepare(sql);
+            console.log('4 - STMT prepared');
 
-      console.log('4 - STMT prepared', preparedStmt);
+            await statement.execute();
 
-      const results = await statement.execute();
+            console.log('5 - executed statement');
 
-      console.log('5 - executed statement');
+            await pool.detach(connection);
 
-      if (results) {
-         console.log(`results:\n ${JSON.stringify(results)}`);
+            console.log('6 - stopped connection');
+
+            resolve('executed calling RPG program');
+         }
+         catch (err) {
+            reject('error occured while calling RPG program: ' + err);
+         }
       }
-
-      await pool.detach(connection);
-
-      console.log('6 - stopped connection');
-   }
-   catch (err) {
-      console.log(err);
-   }
-
-
-   return results;
+   })
 
    // const sql = `call #RHEPGM.RHEXML3(${fileName})`
 

@@ -3,7 +3,7 @@ const crypto = require('crypto');
 
 
 module.exports = async (req, res, next) => {
-   const authHeader = req.headers.authorization; // if sent with header as 'Bearer xxxtokenxxx'
+   const authHeader = req.headers.authorization;
    let decoded = new Buffer.from(authHeader, 'base64').toString();
 
    let username = decoded.split(':')[0];
