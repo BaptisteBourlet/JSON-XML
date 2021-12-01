@@ -8,7 +8,7 @@ const { toXML } = require('jstoxml');
 dotenv.config();
 const PORT = 62315;
 const basicAuth = require('./basicAuth');
-// const { DBPool } = require('idb-pconnector');
+const { DBPool } = require('idb-pconnector');
 
 
 // packages used
@@ -73,46 +73,46 @@ app.post('/data/CbiMessages', basicAuth, (req, res) => {
 })
 
 
-// app.post('/test', (req, res) => {
-//    const receivedJSON = req.body;
+app.post('/test', (req, res) => {
+   const receivedJSON = req.body;
 
-//    const folder = __dirname + '/parsedXML';
+   const folder = __dirname + '/parsedXML';
 
-//    if (!checkValidProps(receivedJSON)) {
-//       res.status(400).send('Format incorrect, please check again the properties');
-//       return;
-//    }
+   if (!checkValidProps(receivedJSON)) {
+      res.status(400).send('Format incorrect, please check again the properties');
+      return;
+   }
 
-//    try {
-//       if (!fs.existsSync(folder)) {
-//          fs.mkdirSync(folder);
-//       }
+   try {
+      if (!fs.existsSync(folder)) {
+         fs.mkdirSync(folder);
+      }
 
-//       let XML = toXML(generateCorrectFormat(receivedJSON), xmlOptions);
+      let XML = toXML(generateCorrectFormat(receivedJSON), xmlOptions);
 
-//       const fileName = `${generateName(receivedJSON)}.xml`;
+      const fileName = `${generateName(receivedJSON)}.xml`;
 
-//       let fileNameWithPath = `${folder}/${fileName}`;
+      let fileNameWithPath = `${folder}/${fileName}`;
 
-//       fs.writeFile(`${fileNameWithPath}`, XML, (err) => {
-//          if (err) {
-//             res.status(401).send('Unable to write file to disk', err);
-//             return;
-//          }
+      fs.writeFile(`${fileNameWithPath}`, XML, (err) => {
+         if (err) {
+            res.status(401).send('Unable to write file to disk', err);
+            return;
+         }
 
-//          fileNameWithPath = fileNameWithPath.replace('/BECAB004', '');
+         fileNameWithPath = fileNameWithPath.replace('/BECAB004', '');
 
-//          const callResult = callRPG(fileNameWithPath);
+         const callResult = callRPG(fileNameWithPath);
 
-//          res.status(200).send('Received and parsed the JSON.', callResult);
-//       });
-//    }
+         res.status(200).send('Received and parsed the JSON.', callResult);
+      });
+   }
 
-//    catch (err) {
-//       res.status(401).send('Error occured.', err);
-//       console.log({ check, err });
-//    }
-// })
+   catch (err) {
+      res.status(401).send('Error occured.', err);
+      console.log({ check, err });
+   }
+})
 
 
 
