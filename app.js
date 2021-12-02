@@ -209,9 +209,10 @@ const checkValidProps = (json) => {
    return validString == stringToCheck;
 }
 
-
 const addRightPads = (fileName) => {
-   return fileName + new Array(256 - fileName.length + 1).join(' ');
+   //return fileName with space Pad => fileName.length = 256;
+   const oneSpace = ' ';
+   return fileName + oneSpace.repeat(256 - fileName.length);
 }
 
 const generateName = (json) => {
@@ -225,7 +226,7 @@ const generateName = (json) => {
 
 const generateCorrectFormat = (json) => {
    return {
-      Envelop: {
+      Envelope: {
          Header: {
             MessageId: `{${json.MessageKey.toUpperCase()}}`,
             Action: 'http://schemas.microsoft.com/dynamics/2012/01/services/CsCbiNewMessageService/create',
