@@ -100,7 +100,9 @@ app.post('/test', (req, res) => {
             return;
          }
 
-         // fileNameWithPath = fileNameWithPath.replace('/BECAB004', '');
+         fileNameWithPath = fileNameWithPath.replace('/BECAB004', '');
+
+         fileNameWithPath = addRightPads(fileNameWithPath);
 
          callRPG(fileNameWithPath);
 
@@ -110,7 +112,7 @@ app.post('/test', (req, res) => {
 
    catch (err) {
       res.status(401).send('Error occured.', err);
-      console.log({ check, err });
+      console.log(err);
    }
 })
 
@@ -207,6 +209,10 @@ const checkValidProps = (json) => {
    return validString == stringToCheck;
 }
 
+
+const addRightPads = (fileName) => {
+   return fileName + new Array(256 - fileName.length + 1).join(' ');
+}
 
 const generateName = (json) => {
    const { Company, SequenceGroupId, MessageKey, MessageXml, ConversationSeqNo } = json;
