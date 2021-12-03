@@ -17,15 +17,20 @@
 // dWRheTp1ZGF5SlNPTjJYTUw=
 
 
+// let string = "/wwwaaaaaaaaa/cdvts/htdocs/rhenania/cbexport/0100_DAT(RHE1)_(3010-0300(0))_3264268A-0B01-47BA-97D1-D6EE99D497C5.xml";
 
-
-let string = "/wwwaaaaaaaaa/cdvts/htdocs/rhenania/cbexport/0100_DAT(RHE1)_(3010-0300(0))_3264268A-0B01-47BA-97D1-D6EE99D497C5.xml";
-
+// // const addRightPads = (fileName) => {
+// //    return fileName + new Array(256 - fileName.length + 1).join(' ');
+// // }
 // const addRightPads = (fileName) => {
-//    return fileName + new Array(256 - fileName.length + 1).join(' ');
+//    //return fileName with space Pad => fileName.length = 256;
+//    const oneSpace = ' ';
+//    return fileName + oneSpace.repeat(256 - fileName.length);
 // }
-const addRightPads = (fileName) => {
-   //return fileName with space Pad => fileName.length = 256;
-   const oneSpace = ' ';
-   return fileName + oneSpace.repeat(256 - fileName.length);
-}
+
+// console.log(addRightPads(string).length);
+
+
+const messageId = 'laptest02-uday-sample-b044-c591f788df89';
+
+console.log(messageId.length)

@@ -13,7 +13,8 @@ const { DBPool } = require('idb-pconnector');
 
 // packages used
 // https://www.npmjs.com/package/jstoxml
-// https://jwt.io/
+// https://www.npmjs.com/package/idb-pconnector
+
 
 // options
 const corsOptions = {
@@ -109,7 +110,45 @@ app.post('/test', (req, res) => {
          res.status(200).send('Received and parsed the JSON.');
       });
    }
+   catch (err) {
+      res.status(401).send('Error occured.', err);
+      console.log(err);
+   }
+})
 
+
+
+app.post('/testParam', async (req, res) => {
+   const receivedJSON = req.body;
+
+   const folder = __dirname + '/parsedXML';
+
+   try {
+      if (!fs.existsSync(folder)) {
+         fs.mkdirSync(folder);
+      }
+
+      let XML = toXML(generateCorrectFormat(receivedJSON), xmlOptions);
+
+      const fileName = `${generateName(receivedJSON)}.xml`;
+
+      let fileNameWithPath = `${folder}/${fileName}`;
+
+      fs.writeFile(`${fileNameWithPath}`, XML, async (err) => {
+         if (err) {
+            res.status(401).send('Unable to write file to disk: ' + err);
+            return;
+         }
+
+         fileNameWithPath = fileNameWithPath.replace('/BECAB004', '');
+
+         fileNameWithPath = addRightPads(fileNameWithPath);
+
+         const result = callRPGWithParam(fileNameWithPath, '');
+
+         res.status(200).send('Received and parsed the JSON.' + result);
+      });
+   }
    catch (err) {
       res.status(401).send('Error occured.', err);
       console.log(err);
@@ -146,6 +185,7 @@ const callRPG = async (fileName) => {
 
       await statement.execute();
 
+
       console.log('5 - executed statement');
 
       await pool.detach(connection);
@@ -158,27 +198,26 @@ const callRPG = async (fileName) => {
    }
 }
 
-// const sql = `call #RHEPGM.RHEXML3(${fileName})`
 
-// const dbconn = new db.dbconn();
 
-// dbconn.conn("*LOCAL");
 
-// const stmt = new db.dbstmt(dbconn);
 
-// stmt.prepareSync(sql);
+const callRPGWithParam = async (fileName, extraParam) => {
 
-// stmt.bindParamSync([
-//    [fileName, db.SQL_PARAM_IN
-// ]);
+   const pool = new DBPool();
 
-// stmt.executeSync(function callback(out) {
-//    console.log('file has been imported', out)
-// });
+   console.log('1 - created new Pool');
 
-// delete stmt;
-// dbconn.disconn();
-// delete dbconn;
+   const sql = `CALL RHEPGM.RHEXML3 (?, ?)`;
+
+   const params = [`'${fileName}'`, extraParam];
+
+   const result = await pool.prepareExecute(sql, params);
+
+   console.log('2 - SQL executed');
+
+   return result;
+}
 
 
 const checkValidProps = (json) => {
@@ -257,5 +296,4 @@ const generateCorrectFormat = (json) => {
       }
    }
 }
-
 
