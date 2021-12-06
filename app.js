@@ -123,6 +123,8 @@ app.post('/testParam', async (req, res) => {
 
    const folder = __dirname + '/parsedXML';
 
+   let extraParam = '';
+
    try {
       if (!fs.existsSync(folder)) {
          fs.mkdirSync(folder);
@@ -144,9 +146,9 @@ app.post('/testParam', async (req, res) => {
 
          fileNameWithPath = addRightPads(fileNameWithPath);
 
-         const result = callRPGWithParam(fileNameWithPath, '');
+         const result = await callRPGWithParam(fileNameWithPath, extraParam);
 
-         res.status(200).send('Received and parsed the JSON.' + result);
+         res.status(200).send('Received and parsed the JSON. ' + result);
       });
    }
    catch (err) {
