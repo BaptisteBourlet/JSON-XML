@@ -8,7 +8,7 @@ const { toXML } = require('jstoxml');
 dotenv.config();
 const PORT = 62315;
 const basicAuth = require('./basicAuth');
-// const { DBPool } = require('idb-pconnector');
+const { DBPool } = require('idb-pconnector');
 
 
 // packages used
@@ -187,7 +187,6 @@ const callRPG = async (fileName) => {
 
       await statement.execute();
 
-
       console.log('5 - executed statement');
 
       await pool.detach(connection);
@@ -205,7 +204,6 @@ const callRPG = async (fileName) => {
 
 
 const callRPGWithParam = async (fileName, extraParam) => {
-
    const pool = new DBPool();
 
    console.log('1 - created new Pool');
