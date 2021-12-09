@@ -8,7 +8,7 @@ const { toXML } = require('jstoxml');
 dotenv.config();
 const PORT = 62315;
 const basicAuth = require('./basicAuth');
-const { DBPool } = require('idb-pconnector');
+// const { DBPool } = require('idb-pconnector');
 
 
 // packages used
@@ -68,7 +68,7 @@ app.post('/data/CbiMessages', basicAuth, (req, res) => {
       });
    }
    catch (err) {
-      res.status(401).send('Error occured: ' + err);
+      res.status(400).send('Error occured: ' + err);
       console.log(err);
    }
 })
@@ -212,7 +212,7 @@ const callRPGWithParam = async (fileName, extraParam) => {
 
    const sql = `CALL RHEPGM.RHEXML3 (?, ?)`;
 
-   const params = [`'${fileName}'`, extraParam];
+   const params = [`'${fileName}'`, `'${extraParam}'`];
 
    const result = await pool.prepareExecute(sql, params);
 
@@ -260,7 +260,8 @@ const generateName = (json) => {
    const { Company, SequenceGroupId, MessageKey, MessageXml, ConversationSeqNo } = json;
 
    let match = MessageXml.match(/<ItemId>([^<]*)<\/ItemId>/);
-   let ItemId = match[1]; // extract ItemId from JSON
+
+   let ItemId = match ? match[1] : ''; // extract ItemId from JSON
 
    return `${SequenceGroupId}_DAT(${Company})_(${ItemId}(${ConversationSeqNo}))_${MessageKey.toUpperCase()}`;
 }
