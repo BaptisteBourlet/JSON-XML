@@ -187,7 +187,7 @@ app.post('/testSelect', async (req, res) => {
 
          callRPG(fileNameWithPath);
 
-         setTimeout(() => {
+         setTimeout(async () => {
             const result = await getMessageKey(receivedJSON.ConversationId);
 
             res.status(200).send('Received and parsed the JSON. ' + result);
@@ -229,7 +229,7 @@ app.post('/testSelectAll', async (req, res) => {
 
          callRPG(fileNameWithPath);
 
-         setTimeout(() => {
+         setTimeout(async () => {
             const result = await getAll();
 
             res.status(200).send('Received and parsed the JSON. ' + result);

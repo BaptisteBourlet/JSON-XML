@@ -27,10 +27,3 @@
 //    const oneSpace = ' ';
 //    return fileName + oneSpace.repeat(256 - fileName.length);
 // }
-
-// console.log(addRightPads(string).length);
-
-
-const messageId = 'laptest02-uday-sample-b044-c591f788df89';
-
-console.log(messageId.length)
