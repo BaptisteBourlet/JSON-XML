@@ -9,6 +9,7 @@ dotenv.config();
 const PORT = 62315;
 const basicAuth = require('./basicAuth');
 const { DBPool } = require('idb-pconnector');
+const { Connection, Statement, } = require('idb-pconnector');
 
 
 // packages used
@@ -107,7 +108,7 @@ app.post('/test', (req, res) => {
 
          callRPG(fileNameWithPath);
 
-         res.status(200).send('Received and parsed the JSON.');
+         res.status(200).send('Received and parsed the JSON.' + result);
       });
    }
    catch (err) {
@@ -123,7 +124,7 @@ app.post('/testParam', async (req, res) => {
 
    const folder = __dirname + '/parsedXML';
 
-   let extraParam = '';
+   let extraParam = ' ';
 
    try {
       if (!fs.existsSync(folder)) {
@@ -142,9 +143,9 @@ app.post('/testParam', async (req, res) => {
             return;
          }
 
-         fileNameWithPath = fileNameWithPath.replace('/BECAB004', '');
+         fileNameWithPath = fileNameWithPath.replace('/BECAB004', ''); // remove /BECAB004
 
-         fileNameWithPath = addRightPads(fileNameWithPath);
+         fileNameWithPath = addRightPads(fileNameWithPath); // add space to make 256 length
 
          const result = await callRPGWithParam(fileNameWithPath, extraParam);
 
@@ -156,6 +157,94 @@ app.post('/testParam', async (req, res) => {
       console.log(err);
    }
 })
+
+
+app.post('/testSelect', async (req, res) => {
+   const receivedJSON = req.body;
+
+   const folder = __dirname + '/parsedXML';
+
+   try {
+      if (!fs.existsSync(folder)) {
+         fs.mkdirSync(folder);
+      }
+
+      let XML = toXML(generateCorrectFormat(receivedJSON), xmlOptions);
+
+      const fileName = `${generateName(receivedJSON)}.xml`;
+
+      let fileNameWithPath = `${folder}/${fileName}`;
+
+      fs.writeFile(`${fileNameWithPath}`, XML, async (err) => {
+         if (err) {
+            res.status(401).send('Unable to write file to disk: ' + err);
+            return;
+         }
+
+         fileNameWithPath = fileNameWithPath.replace('/BECAB004', ''); // remove /BECAB004
+
+         fileNameWithPath = addRightPads(fileNameWithPath); // add space to make 256 length
+
+         callRPG(fileNameWithPath);
+
+         setTimeout(() => {
+            const result = getMessageKey(receivedJSON.ConversationId);
+
+            res.status(200).send('Received and parsed the JSON. ' + result);
+         }, 1000)
+      });
+   }
+   catch (err) {
+      res.status(401).send('Error occured.', err);
+      console.log(err);
+   }
+})
+
+
+app.post('/testSelectAll', async (req, res) => {
+   const receivedJSON = req.body;
+
+   const folder = __dirname + '/parsedXML';
+
+   try {
+      if (!fs.existsSync(folder)) {
+         fs.mkdirSync(folder);
+      }
+
+      let XML = toXML(generateCorrectFormat(receivedJSON), xmlOptions);
+
+      const fileName = `${generateName(receivedJSON)}.xml`;
+
+      let fileNameWithPath = `${folder}/${fileName}`;
+
+      fs.writeFile(`${fileNameWithPath}`, XML, async (err) => {
+         if (err) {
+            res.status(401).send('Unable to write file to disk: ' + err);
+            return;
+         }
+
+         fileNameWithPath = fileNameWithPath.replace('/BECAB004', ''); // remove /BECAB004
+
+         fileNameWithPath = addRightPads(fileNameWithPath); // add space to make 256 length
+
+         callRPG(fileNameWithPath);
+
+         setTimeout(() => {
+            const result = getAll();
+
+            res.status(200).send('Received and parsed the JSON. ' + result);
+         }, 1000)
+      });
+   }
+   catch (err) {
+      res.status(401).send('Error occured.', err);
+      console.log(err);
+   }
+})
+
+
+
+
 
 
 // server starts
@@ -199,7 +288,29 @@ const callRPG = async (fileName) => {
    }
 }
 
+const getMessageKey = async (conversationId) => {
 
+   const connection = new Connection({ url: '*LOCAL' });
+
+   const statement = new Statement(connection);
+
+   const results = await statement.exec(`SELECT * FROM RHEDTA.RHEXMLH WHERE CMSGCNVID = '${conversationId}'`);
+
+   return results;
+}
+
+
+
+const getAll = async () => {
+
+   const connection = new Connection({ url: '*LOCAL' });
+
+   const statement = new Statement(connection);
+
+   const results = await statement.exec('SELECT * FROM RHEDTA.RHEXMLH');
+
+   return results;
+}
 
 
 
@@ -210,7 +321,7 @@ const callRPGWithParam = async (fileName, extraParam) => {
 
    const sql = `CALL RHEPGM.RHEXML3 (?, ?)`;
 
-   const params = [`'${fileName}'`, `'${extraParam}'`];
+   const params = [`'${fileName}'`, `${extraParam}`];
 
    const result = await pool.prepareExecute(sql, params);
 
