@@ -36,89 +36,10 @@ app.set('view engine', 'html');
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors(corsOptions));
 
+
+
 // CableBuilder routes
-
 app.post('/data/CbiMessages', basicAuth, (req, res) => {
-   const receivedJSON = req.body;
-
-   const folder = __dirname + '/parsedXML';
-
-   // if (!checkValidProps(receivedJSON)) {
-   //    res.status(400).send('Format incorrect, please check again the properties');
-   //    return;
-   // }
-
-   try {
-      if (!fs.existsSync(folder)) {
-         fs.mkdirSync(folder);
-      }
-
-      let XML = toXML(generateCorrectFormat(receivedJSON), xmlOptions);
-
-      const fileName = `${generateName(receivedJSON)}.xml`;
-
-      let fileNameWithPath = `${folder}/${fileName}`;
-
-      fs.writeFile(`${fileNameWithPath}`, XML, (err) => {
-         if (err) {
-            res.status(401).send('Unable to write file to disk: ' + err);
-            return;
-         }
-
-         res.status(200).send('Received and successfully parsed the JSON.');
-      });
-   }
-   catch (err) {
-      res.status(400).send('Error occured: ' + err);
-      console.log(err);
-   }
-})
-
-
-app.post('/test', (req, res) => {
-   const receivedJSON = req.body;
-
-   const folder = __dirname + '/parsedXML';
-
-   // if (!checkValidProps(receivedJSON)) {
-   //    res.status(400).send('Format incorrect, please check again the properties');
-   //    return;
-   // }
-
-   try {
-      if (!fs.existsSync(folder)) {
-         fs.mkdirSync(folder);
-      }
-
-      let XML = toXML(generateCorrectFormat(receivedJSON), xmlOptions);
-
-      const fileName = `${generateName(receivedJSON)}.xml`;
-
-      let fileNameWithPath = `${folder}/${fileName}`;
-
-      fs.writeFile(`${fileNameWithPath}`, XML, async (err) => {
-         if (err) {
-            res.status(401).send('Unable to write file to disk: ' + err);
-            return;
-         }
-
-         fileNameWithPath = fileNameWithPath.replace('/BECAB004', '');
-
-         fileNameWithPath = addRightPads(fileNameWithPath);
-
-         callRPG(fileNameWithPath);
-
-         res.status(200).send('Received and parsed the JSON.' + result);
-      });
-   }
-   catch (err) {
-      res.status(401).send('Error occured.', err);
-      console.log(err);
-   }
-})
-
-
-app.post('/testSelect', async (req, res) => {
    const receivedJSON = req.body;
 
    const folder = __dirname + '/parsedXML';
@@ -147,16 +68,12 @@ app.post('/testSelect', async (req, res) => {
          callRPG(fileNameWithPath);
 
          setTimeout(async () => {
-            const result = await getMessageKey(receivedJSON.ConversationId);
+            const result = await getMessageKey(receivedJSON.MessageKey);
 
-            console.log(result);
-
-            // if (result[0].CMSGCNVID == receivedJSON.ConversationId) {
-            //    res.status(200).send('Received and parsed the JSON. ' + result[0].CMSGCNVID);
-            // }
-
-            res.status(200).send('Received and parsed the JSON. ' + result[0]?.CMSGCNVID);
-         }, 1000)
+            if (result[0].CMSGID == receivedJSON.MessageKey) {
+               res.status(200).send('Received and parsed the JSON for Key:' + result[0].CMSGID);
+            }
+         }, 300)
       });
    }
    catch (err) {
@@ -194,13 +111,13 @@ const callRPG = async (fileName) => {
    }
 }
 
-const getMessageKey = async (conversationId) => {
+const getMessageKey = async (messageKey) => {
 
    const connection = new Connection({ url: '*LOCAL' });
 
    const statement = new Statement(connection);
 
-   const results = await statement.exec(`SELECT * FROM RHEDTA.RHEXMLH WHERE CMSGCNVID = '${conversationId}'`);
+   const results = await statement.exec(`SELECT * FROM RHEDTA.RHEXMLH WHERE CMSGID = '${messageKey}'`);
 
    return results;
 }
@@ -226,10 +143,6 @@ const checkValidProps = (json) => {
    let propsToCheck = Object.keys(json).sort(); // expect an array exactly like validProps
    let validString = validProps.join('');
    let stringToCheck = propsToCheck.join('');
-
-   console.log('VALID', validString);
-   console.log('CHECK', stringToCheck);
-
 
    return validString == stringToCheck;
 }
