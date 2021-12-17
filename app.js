@@ -110,10 +110,12 @@ app.post('/test', basicAuth, (req, res) => {
          setTimeout(async () => {
             const result = await getMessageKey(receivedJSON.MessageKey);
 
-            if (result[0].CMSGID == receivedJSON.MessageKey) {
-               res.status(200).send('Received and parsed the JSON for Key:' + receivedJSON.MessageKey);
-            }
-         }, 500)
+            console.log(result);
+
+            res.status(200).send('Received and parsed the JSON for Key:' + receivedJSON.MessageKey);
+            // if (result[0].CMSGID == receivedJSON.MessageKey) {
+            // }
+         }, 200)
       });
    }
    catch (err) {
