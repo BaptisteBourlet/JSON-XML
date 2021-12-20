@@ -37,85 +37,45 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors(corsOptions));
 
 
+// CableBuilder official route
 
-// CableBuilder routes
 app.post('/data/CbiMessages', basicAuth, (req, res) => {
+   // 1. receive JSON data from body
    const receivedJSON = req.body;
 
    const folder = __dirname + '/parsedXML';
 
    try {
+      // 2. check if folder exists, if not, create folder
       if (!fs.existsSync(folder)) {
          fs.mkdirSync(folder);
       }
 
+      // 3. parse JSON to XML, with correct format generated with raw JSON received
       let XML = toXML(generateCorrectFormat(receivedJSON), xmlOptions);
 
+      // 4. generate fileName and add path to it
       const fileName = `${generateName(receivedJSON)}.xml`;
-
       let fileNameWithPath = `${folder}/${fileName}`;
 
+
+      // 5. write XML file to parseXML folder
       fs.writeFile(`${fileNameWithPath}`, XML, async (err) => {
          if (err) {
             res.status(401).send('Unable to write file to disk: ' + err);
             return;
          }
 
-         fileNameWithPath = fileNameWithPath.replace('/BECAB004', ''); // remove /BECAB004
+         // 6. remove /BECAB004 in order for the RPG program to find the file and import
+         fileNameWithPath = fileNameWithPath.replace('/BECAB004', '');
 
-         fileNameWithPath = addRightPads(fileNameWithPath); // add space to make 256 length
-
+         // 7. add spaces to make the fileNameWithPath length 256 charater long
+         fileNameWithPath = addRightPads(fileNameWithPath); 
+         
+         // 8. call Bart's RPG program to process XML file in parsedXML
          callRPG(fileNameWithPath);
 
          res.status(200).send('Received and parsed the JSON for Key:' + receivedJSON.MessageKey);
-
-      });
-   }
-   catch (err) {
-      res.status(401).send('Error occured.', err);
-      console.log(err);
-   }
-})
-
-
-
-app.post('/test', basicAuth, (req, res) => {
-   const receivedJSON = req.body;
-
-   const folder = __dirname + '/parsedXML';
-
-   try {
-      if (!fs.existsSync(folder)) {
-         fs.mkdirSync(folder);
-      }
-
-      let XML = toXML(generateCorrectFormat(receivedJSON), xmlOptions);
-
-      const fileName = `${generateName(receivedJSON)}.xml`;
-
-      let fileNameWithPath = `${folder}/${fileName}`;
-
-      fs.writeFile(`${fileNameWithPath}`, XML, async (err) => {
-         if (err) {
-            res.status(401).send('Unable to write file to disk: ' + err);
-            return;
-         }
-
-         fileNameWithPath = fileNameWithPath.replace('/BECAB004', ''); // remove /BECAB004
-
-         fileNameWithPath = addRightPads(fileNameWithPath); // add space to make 256 length
-
-         callRPG(fileNameWithPath);
-
-         setTimeout(async () => {
-            const result = await getMessageKey(receivedJSON.MessageKey);
-
-            console.log(result);
-
-            res.status(200).send('Received and parsed the JSON for Key:' + receivedJSON.MessageKey);
-            // if (result[0].CMSGID == receivedJSON.MessageKey) {
-            // }
-         }, 200)
       });
    }
    catch (err) {
@@ -129,10 +89,6 @@ app.post('/test', basicAuth, (req, res) => {
 const server = app.listen(PORT, () => {
    console.log('listening on port ' + PORT);
 })
-
-
-
-
 
 
 // functions & middlewares
