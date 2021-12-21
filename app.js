@@ -58,7 +58,7 @@ app.post('/data/CbiMessages', basicAuth, (req, res) => {
       const fileName = `${generateName(receivedJSON)}.xml`;
       let fileNameWithPath = `${folder}/${fileName}`;
 
-
+// test
       // 5. write XML file to parseXML folder
       fs.writeFile(`${fileNameWithPath}`, XML, async (err) => {
          if (err) {
